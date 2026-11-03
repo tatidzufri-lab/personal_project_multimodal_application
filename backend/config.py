@@ -53,7 +53,8 @@ class Settings(BaseSettings):
     api_port: int = 8000
     
     # История
-    history_file: str = "history.json"
+    # В контейнере указывает на примонтированный том, чтобы история переживала пересборку
+    history_file: str = os.getenv("HISTORY_FILE", "history.json")
     max_history_items: int = 10
     
     # Парсер

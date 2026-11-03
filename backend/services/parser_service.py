@@ -3,6 +3,7 @@
 """
 import base64
 import asyncio
+import os
 import time
 import logging
 from typing import Optional, Tuple
@@ -53,12 +54,23 @@ class ParserService:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('excludeSwitches', ['enable-automation'])
         options.add_experimental_option('useAutomationExtension', False)
-        
+
+        # В контейнере браузер и драйвер ставятся системным пакетом chromium/chromium-driver.
+        # Локально на Mac переменные не заданы — работает прежний путь через webdriver-manager.
+        chrome_bin = os.getenv('CHROME_BIN')
+        if chrome_bin:
+            options.binary_location = chrome_bin
+
         logger.debug("  Опции Chrome настроены")
-        logger.info("  📥 Загрузка ChromeDriver...")
-        
-        # Автоматическая установка ChromeDriver
-        service = Service(ChromeDriverManager().install())
+
+        chromedriver_path = os.getenv('CHROMEDRIVER_PATH')
+        if chromedriver_path:
+            logger.info(f"  📦 Системный ChromeDriver: {chromedriver_path}")
+            service = Service(executable_path=chromedriver_path)
+        else:
+            logger.info("  📥 Загрузка ChromeDriver...")
+            service = Service(ChromeDriverManager().install())
+
         driver = webdriver.Chrome(service=service, options=options)
         
         elapsed = time.time() - start_time

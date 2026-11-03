@@ -40,6 +40,7 @@ class HistoryService:
         """Создать файл истории если его нет"""
         if not self.history_file.exists():
             logger.info(f"  📁 Создание файла истории: {self.history_file}")
+            self.history_file.parent.mkdir(parents=True, exist_ok=True)
             self.history_file.write_text("[]", encoding="utf-8")
             logger.info("  ✓ Файл создан")
         else:

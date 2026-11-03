@@ -1,0 +1,21 @@
+services:
+  web:
+    build:
+      context: .
+      args:
+        APP_UID: "${APP_UID:-1000}"
+    image: competitor-ai
+    container_name: competitor-ai
+    env_file: .env
+    environment:
+      - TZ=Europe/Moscow
+      - HISTORY_FILE=/app/data/history.json
+    ports:
+      - "127.0.0.1:8003:8000"
+    volumes:
+      - ./data:/app/data
+    # Chromium под нагрузкой прожорлив, поэтому лимит выше обычного;
+    # shm_size — иначе headless-браузер падает на тяжёлых страницах
+    shm_size: 256m
+    restart: unless-stopped
+    mem_limit: 1200m
