@@ -24,6 +24,8 @@ from backend.models.schemas import (
 from backend.services.openai_service import openai_service
 from backend.services.parser_service import parser_service
 from backend.services.history_service import history_service
+from backend.services.usage_limits import demo_quota
+from backend.services.url_guard import check_public_url
 
 # Логгер для API
 logger = logging.getLogger("competitor_monitor.api")
@@ -76,6 +78,11 @@ async def log_requests(request: Request, call_next):
     return response
 
 
+def client_ip(request: Request) -> str:
+    """IP посетителя: за nginx — из X-Real-IP, локально — адрес соединения."""
+    return request.headers.get("x-real-ip") or (request.client.host if request.client else "unknown")
+
+
 # === События жизненного цикла ===
 
 @app.on_event("startup")
@@ -111,7 +118,7 @@ async def root():
 
 
 @app.post("/analyze_text", response_model=TextAnalysisResponse)
-async def analyze_text(request: TextAnalysisRequest):
+async def analyze_text(request: TextAnalysisRequest, http_request: Request):
     """
     Анализ текста конкурента
     """
@@ -119,7 +126,16 @@ async def analyze_text(request: TextAnalysisRequest):
     logger.info("📝 API: АНАЛИЗ ТЕКСТА")
     logger.info(f"  Длина текста: {len(request.text)} символов")
     logger.info(f"  Превью: {request.text[:80]}...")
-    
+
+    if len(request.text) > settings.max_text_chars:
+        return TextAnalysisResponse(
+            success=False,
+            error=f"Текст слишком длинный: {len(request.text)} символов, в демо можно до {settings.max_text_chars}",
+        )
+    limit_error = demo_quota.try_acquire(client_ip(http_request))
+    if limit_error:
+        return TextAnalysisResponse(success=False, error=limit_error)
+
     try:
         start_time = time.time()
         
@@ -153,7 +169,7 @@ async def analyze_text(request: TextAnalysisRequest):
 
 
 @app.post("/analyze_image", response_model=ImageAnalysisResponse)
-async def analyze_image(file: UploadFile = File(...)):
+async def analyze_image(http_request: Request, file: UploadFile = File(...)):
     """
     Анализ изображения конкурента
     """
@@ -180,6 +196,14 @@ async def analyze_image(file: UploadFile = File(...)):
         content = await file.read()
         file_size_kb = len(content) / 1024
         logger.info(f"  Размер файла: {file_size_kb:.1f} KB")
+        if len(content) > settings.max_image_mb * 1024 * 1024:
+            return ImageAnalysisResponse(
+                success=False,
+                error=f"Файл слишком большой: в демо можно до {settings.max_image_mb} МБ",
+            )
+        limit_error = demo_quota.try_acquire(client_ip(http_request))
+        if limit_error:
+            return ImageAnalysisResponse(success=False, error=limit_error)
         
         image_base64 = base64.b64encode(content).decode('utf-8')
         logger.info(f"  Base64 размер: {len(image_base64)} символов")
@@ -219,14 +243,25 @@ async def analyze_image(file: UploadFile = File(...)):
 
 
 @app.post("/parse_demo", response_model=ParseDemoResponse)
-async def parse_demo(request: ParseDemoRequest):
+async def parse_demo(request: ParseDemoRequest, http_request: Request):
     """
     Парсинг и анализ сайта конкурента через Chrome
     """
     logger.info("=" * 50)
     logger.info("🌐 API: ПАРСИНГ САЙТА")
     logger.info(f"  URL: {request.url}")
-    
+
+    target = request.url.strip()
+    if not target.startswith(("http://", "https://")):
+        target = "https://" + target
+    url_error = check_public_url(target)
+    if url_error:
+        logger.warning(f"  ⛔ Адрес отклонён: {url_error}")
+        return ParseDemoResponse(success=False, error=url_error)
+    limit_error = demo_quota.try_acquire(client_ip(http_request))
+    if limit_error:
+        return ParseDemoResponse(success=False, error=limit_error)
+
     try:
         total_start = time.time()
         

@@ -19,6 +19,7 @@ from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 
 from backend.config import settings
+from backend.services.url_guard import BLOCKED_URL_PATTERNS, check_public_url
 
 # Логгер для сервиса
 logger = logging.getLogger("competitor_monitor.parser")
@@ -91,6 +92,12 @@ class ParserService:
         try:
             driver = self._create_driver()
             driver.set_page_load_timeout(self.timeout)
+            # Вложенные запросы страницы (iframe, картинки) на внутренние IP не пускаем
+            try:
+                driver.execute_cdp_cmd("Network.enable", {})
+                driver.execute_cdp_cmd("Network.setBlockedURLs", {"urls": BLOCKED_URL_PATTERNS})
+            except Exception as e:
+                logger.warning(f"  CDP-блокировка не включилась: {e}")
             
             # Переходим на страницу
             logger.info(f"  📄 Загрузка страницы...")
@@ -98,6 +105,12 @@ class ParserService:
             driver.get(url)
             page_elapsed = time.time() - page_start
             logger.info(f"  ✓ Страница загружена за {page_elapsed:.2f} сек")
+
+            # После редиректов адрес мог смениться на внутренний — тогда ничего не отдаём
+            redirect_error = check_public_url(driver.current_url)
+            if redirect_error:
+                logger.warning(f"  ⛔ Редирект на непубличный адрес: {driver.current_url}")
+                return None, None, None, None, redirect_error
             
             # Ждём загрузки body
             logger.info("  ⏳ Ожидание body элемента...")

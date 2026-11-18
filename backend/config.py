@@ -56,6 +56,13 @@ class Settings(BaseSettings):
     # В контейнере указывает на примонтированный том, чтобы история переживала пересборку
     history_file: str = os.getenv("HISTORY_FILE", "history.json")
     max_history_items: int = 10
+
+    # Лимиты публичного демо: анализ текста, картинки и сайта — платные вызовы LLM
+    usage_file: str = os.path.join(os.path.dirname(os.getenv("HISTORY_FILE", "history.json")) or ".", "usage.json")
+    demo_max_per_day: int = int(os.getenv("DEMO_MAX_PER_DAY", "100"))
+    demo_max_per_ip_day: int = int(os.getenv("DEMO_MAX_PER_IP_DAY", "20"))
+    max_text_chars: int = int(os.getenv("MAX_TEXT_CHARS", "5000"))
+    max_image_mb: int = int(os.getenv("MAX_IMAGE_MB", "5"))
     
     # Парсер
     parser_timeout: int = 10

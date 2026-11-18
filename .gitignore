@@ -30,3 +30,4 @@ data/history.json
 
 # история запросов анализатора, локальная
 history.json
+data/usage.json
