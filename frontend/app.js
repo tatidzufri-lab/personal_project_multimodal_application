@@ -3,6 +3,120 @@
  * Мониторинг конкурентов - MVP ассистент
  */
 
+// === Языки интерфейса ===
+// Выбор: ?lang=en|ru в адресе → сохраненный выбор → язык браузера → ru.
+// Тот же язык уходит в API (?lang=), и модель отвечает на нем.
+const I18N = {
+    ru: {
+        doc_title: 'Мониторинг конкурентов | AI Ассистент',
+        nav_text: 'Анализ текста', nav_image: 'Анализ изображений', nav_parse: 'Парсинг сайта', nav_history: 'История',
+        status: 'Система активна',
+        page_title: 'Мониторинг конкурентов', page_subtitle: 'AI-ассистент для анализа конкурентной среды',
+        text_h2: 'Анализ текста конкурента',
+        text_sub: 'Вставьте текст с сайта конкурента, из рекламы или описания продукта',
+        text_label: 'Текст для анализа',
+        text_placeholder: 'Вставьте текст конкурента для анализа...\n\nНапример: описание продукта, текст с лендинга, рекламное объявление...',
+        analyze: 'Проанализировать',
+        image_sub: 'Загрузите скриншот сайта, баннер или фото упаковки конкурента',
+        drop: 'Перетащите изображение или <span>выберите файл</span>',
+        image_formats: 'PNG, JPG, GIF, WEBP до 10MB',
+        parse_h2: 'Парсинг сайта конкурента',
+        parse_sub: 'Введите URL сайта для автоматического извлечения и анализа контента',
+        parse_label: 'URL сайта', parse_btn: 'Парсить и анализировать',
+        history_h2: 'История запросов', history_sub: 'Последние 10 запросов к системе',
+        history_empty: 'История пуста', clear: 'Очистить',
+        results_h2: 'Результаты анализа', loading: 'Анализирую данные...',
+        strengths: 'Сильные стороны', weaknesses: 'Слабые стороны', unique: 'Уникальные предложения',
+        recommendations: 'Рекомендации', summary: 'Резюме', image_description: 'Описание изображения',
+        visual_score: 'Оценка визуального стиля', insights: 'Маркетинговые инсайты',
+        not_found: 'Не найден', first_paragraph: 'Первый абзац:',
+        type_text: 'Анализ текста', type_image: 'Анализ изображения', type_parse: 'Парсинг сайта',
+        err_short_text: 'Введите текст минимум 10 символов для анализа',
+        err_analysis: 'Произошла ошибка при анализе',
+        err_image_analysis: 'Произошла ошибка при анализе изображения',
+        err_connection: 'Ошибка соединения с сервером',
+        err_choose_image: 'Выберите изображение для анализа',
+        err_enter_url: 'Введите URL сайта для парсинга',
+        err_parse: 'Не удалось распарсить сайт',
+        confirm_clear: 'Вы уверены, что хотите очистить историю?',
+        locale: 'ru-RU'
+    },
+    en: {
+        doc_title: 'Competitor Monitoring | AI Assistant',
+        nav_text: 'Text analysis', nav_image: 'Image analysis', nav_parse: 'Website parsing', nav_history: 'History',
+        status: 'System online',
+        page_title: 'Competitor monitoring', page_subtitle: 'An AI assistant for analysing your competitors',
+        text_h2: 'Competitor text analysis',
+        text_sub: 'Paste text from a competitor’s website, an ad or a product description',
+        text_label: 'Text to analyse',
+        text_placeholder: 'Paste a competitor’s text here...\n\nFor example: a product description, landing page copy, an ad...',
+        analyze: 'Analyse',
+        image_sub: 'Upload a website screenshot, a banner or a photo of a competitor’s packaging',
+        drop: 'Drag an image here or <span>choose a file</span>',
+        image_formats: 'PNG, JPG, GIF, WEBP up to 10MB',
+        parse_h2: 'Competitor website parsing',
+        parse_sub: 'Enter a website URL to extract and analyse its content automatically',
+        parse_label: 'Website URL', parse_btn: 'Parse and analyse',
+        history_h2: 'Request history', history_sub: 'The last 10 requests to the system',
+        history_empty: 'No history yet', clear: 'Clear',
+        results_h2: 'Analysis results', loading: 'Analysing...',
+        strengths: 'Strengths', weaknesses: 'Weaknesses', unique: 'Unique offers',
+        recommendations: 'Recommendations', summary: 'Summary', image_description: 'Image description',
+        visual_score: 'Visual style score', insights: 'Marketing insights',
+        not_found: 'Not found', first_paragraph: 'First paragraph:',
+        type_text: 'Text analysis', type_image: 'Image analysis', type_parse: 'Website parsing',
+        err_short_text: 'Enter at least 10 characters of text to analyse',
+        err_analysis: 'Something went wrong during the analysis',
+        err_image_analysis: 'Something went wrong while analysing the image',
+        err_connection: 'Could not connect to the server',
+        err_choose_image: 'Choose an image to analyse',
+        err_enter_url: 'Enter a website URL to parse',
+        err_parse: 'Could not parse the website',
+        confirm_clear: 'Are you sure you want to clear the history?',
+        locale: 'en-GB'
+    }
+};
+
+function detectLang() {
+    const fromUrl = new URLSearchParams(location.search).get('lang');
+    if (fromUrl === 'ru' || fromUrl === 'en') {
+        try { localStorage.setItem('lang', fromUrl); } catch (e) {}
+        return fromUrl;
+    }
+    try {
+        const saved = localStorage.getItem('lang');
+        if (saved === 'ru' || saved === 'en') return saved;
+    } catch (e) {}
+    const nav = (navigator.language || 'ru').toLowerCase();
+    return /^(ru|uk|be|kk)/.test(nav) ? 'ru' : 'en';
+}
+
+let LANG = detectLang();
+const t = (key) => (I18N[LANG] && I18N[LANG][key]) || I18N.ru[key] || key;
+
+function applyI18n() {
+    document.documentElement.lang = LANG;
+    document.title = t('doc_title');
+    document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === LANG);
+        btn.setAttribute('aria-pressed', btn.dataset.lang === LANG ? 'true' : 'false');
+    });
+}
+
+function setLang(lang) {
+    LANG = lang;
+    try { localStorage.setItem('lang', lang); } catch (e) {}
+    const url = new URL(location.href);
+    url.searchParams.set('lang', lang);
+    history.replaceState(null, '', url);
+    applyI18n();
+    ui.hideResults();
+    if (state.currentTab === 'history') ui.loadHistory();
+}
+
 // === State ===
 const state = {
     currentTab: 'text',
@@ -50,7 +164,7 @@ const api = {
     baseUrl: '',
     
     async analyzeText(text) {
-        const response = await fetch(`${this.baseUrl}/analyze_text`, {
+        const response = await fetch(`${this.baseUrl}/analyze_text?lang=${LANG}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ text })
@@ -62,7 +176,7 @@ const api = {
         const formData = new FormData();
         formData.append('file', file);
         
-        const response = await fetch(`${this.baseUrl}/analyze_image`, {
+        const response = await fetch(`${this.baseUrl}/analyze_image?lang=${LANG}`, {
             method: 'POST',
             body: formData
         });
@@ -70,7 +184,7 @@ const api = {
     },
     
     async parseDemo(url) {
-        const response = await fetch(`${this.baseUrl}/parse_demo`, {
+        const response = await fetch(`${this.baseUrl}/parse_demo?lang=${LANG}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ url })
@@ -148,10 +262,10 @@ const ui = {
     
     renderTextAnalysis(analysis) {
         return `
-            ${this.renderResultBlock('Сильные стороны', analysis.strengths, 'strengths')}
-            ${this.renderResultBlock('Слабые стороны', analysis.weaknesses, 'weaknesses')}
-            ${this.renderResultBlock('Уникальные предложения', analysis.unique_offers, 'unique')}
-            ${this.renderResultBlock('Рекомендации', analysis.recommendations, 'recommendations')}
+            ${this.renderResultBlock(t('strengths'), analysis.strengths, 'strengths')}
+            ${this.renderResultBlock(t('weaknesses'), analysis.weaknesses, 'weaknesses')}
+            ${this.renderResultBlock(t('unique'), analysis.unique_offers, 'unique')}
+            ${this.renderResultBlock(t('recommendations'), analysis.recommendations, 'recommendations')}
             ${analysis.summary ? `
                 <div class="result-block result-summary">
                     <h3>
@@ -159,7 +273,7 @@ const ui = {
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                             <polyline points="14 2 14 8 20 8"/>
                         </svg>
-                        Резюме
+                        ${t('summary')}
                     </h3>
                     <p>${analysis.summary}</p>
                 </div>
@@ -178,7 +292,7 @@ const ui = {
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
-                    Описание изображения
+                    ${t('image_description')}
                 </h3>
                 <p>${analysis.description}</p>
             </div>
@@ -188,7 +302,7 @@ const ui = {
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
                     </svg>
-                    Оценка визуального стиля
+                    ${t('visual_score')}
                 </h3>
                 <div class="score-display">
                     <span class="score-value">${analysis.visual_style_score}/10</span>
@@ -199,8 +313,8 @@ const ui = {
                 <p>${analysis.visual_style_analysis}</p>
             </div>
             
-            ${this.renderResultBlock('Маркетинговые инсайты', analysis.marketing_insights, 'insights')}
-            ${this.renderResultBlock('Рекомендации', analysis.recommendations, 'recommendations')}
+            ${this.renderResultBlock(t('insights'), analysis.marketing_insights, 'insights')}
+            ${this.renderResultBlock(t('recommendations'), analysis.recommendations, 'recommendations')}
         `;
     },
     
@@ -213,13 +327,13 @@ const ui = {
                 <div class="value">${parsed.url}</div>
                 
                 <div class="label">Title:</div>
-                <div class="value">${parsed.title || 'Не найден'}</div>
+                <div class="value">${parsed.title || t('not_found')}</div>
                 
                 <div class="label">H1:</div>
-                <div class="value">${parsed.h1 || 'Не найден'}</div>
+                <div class="value">${parsed.h1 || t('not_found')}</div>
                 
-                <div class="label">Первый абзац:</div>
-                <div class="value">${parsed.first_paragraph || 'Не найден'}</div>
+                <div class="label">${t('first_paragraph')}</div>
+                <div class="value">${parsed.first_paragraph || t('not_found')}</div>
             </div>
             
             ${parsed.analysis ? this.renderTextAnalysis(parsed.analysis) : ''}
@@ -269,7 +383,7 @@ const ui = {
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    <p>История пуста</p>
+                    <p>${t('history_empty')}</p>
                 </div>
             `;
             return;
@@ -282,14 +396,14 @@ const ui = {
         };
         
         const typeLabels = {
-            text: 'Анализ текста',
-            image: 'Анализ изображения',
-            parse: 'Парсинг сайта'
+            text: t('type_text'),
+            image: t('type_image'),
+            parse: t('type_parse')
         };
         
         elements.historyList.innerHTML = items.map(item => {
             const date = new Date(item.timestamp);
-            const timeStr = date.toLocaleString('ru-RU', {
+            const timeStr = date.toLocaleString(t('locale'), {
                 day: '2-digit',
                 month: '2-digit',
                 hour: '2-digit',
@@ -329,7 +443,7 @@ const handlers = {
         const text = elements.competitorText.value.trim();
         
         if (text.length < 10) {
-            ui.showError('Введите текст минимум 10 символов для анализа');
+            ui.showError(t('err_short_text'));
             return;
         }
         
@@ -341,10 +455,10 @@ const handlers = {
             if (result.success && result.analysis) {
                 ui.showResults(ui.renderTextAnalysis(result.analysis));
             } else {
-                ui.showError(result.error || 'Произошла ошибка при анализе');
+                ui.showError(result.error || t('err_analysis'));
             }
         } catch (error) {
-            ui.showError('Ошибка соединения с сервером');
+            ui.showError(t('err_connection'));
             console.error(error);
         } finally {
             ui.hideLoading();
@@ -407,7 +521,7 @@ const handlers = {
     
     async handleAnalyzeImage() {
         if (!state.selectedImage) {
-            ui.showError('Выберите изображение для анализа');
+            ui.showError(t('err_choose_image'));
             return;
         }
         
@@ -419,10 +533,10 @@ const handlers = {
             if (result.success && result.analysis) {
                 ui.showResults(ui.renderImageAnalysis(result.analysis));
             } else {
-                ui.showError(result.error || 'Произошла ошибка при анализе изображения');
+                ui.showError(result.error || t('err_image_analysis'));
             }
         } catch (error) {
-            ui.showError('Ошибка соединения с сервером');
+            ui.showError(t('err_connection'));
             console.error(error);
         } finally {
             ui.hideLoading();
@@ -434,7 +548,7 @@ const handlers = {
         let url = elements.urlInput.value.trim();
         
         if (!url) {
-            ui.showError('Введите URL сайта для парсинга');
+            ui.showError(t('err_enter_url'));
             return;
         }
         
@@ -451,10 +565,10 @@ const handlers = {
             if (result.success && result.data) {
                 ui.showResults(ui.renderParsedContent(result.data));
             } else {
-                ui.showError(result.error || 'Не удалось распарсить сайт');
+                ui.showError(result.error || t('err_parse'));
             }
         } catch (error) {
-            ui.showError('Ошибка соединения с сервером');
+            ui.showError(t('err_connection'));
             console.error(error);
         } finally {
             ui.hideLoading();
@@ -463,7 +577,7 @@ const handlers = {
     
     // History
     async handleClearHistory() {
-        if (!confirm('Вы уверены, что хотите очистить историю?')) {
+        if (!confirm(t('confirm_clear'))) {
             return;
         }
         
@@ -483,6 +597,11 @@ const handlers = {
 
 // === Initialize ===
 function init() {
+    applyI18n();
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', () => setLang(btn.dataset.lang));
+    });
+
     // Navigation
     elements.navButtons.forEach(btn => {
         btn.addEventListener('click', handlers.handleNavClick.bind(handlers));

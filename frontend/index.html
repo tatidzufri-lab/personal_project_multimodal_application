@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/styles.css">
+    <link rel="stylesheet" href="/static/styles.css?v=2">
 </head>
 <body>
     <div class="app">
@@ -32,7 +32,7 @@
                         <line x1="16" y1="13" x2="8" y2="13"/>
                         <line x1="16" y1="17" x2="8" y2="17"/>
                     </svg>
-                    Анализ текста
+                    <span data-i18n="nav_text">Анализ текста</span>
                 </button>
                 <button class="nav-btn" data-tab="image">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -40,7 +40,7 @@
                         <circle cx="8.5" cy="8.5" r="1.5"/>
                         <polyline points="21 15 16 10 5 21"/>
                     </svg>
-                    Анализ изображений
+                    <span data-i18n="nav_image">Анализ изображений</span>
                 </button>
                 <button class="nav-btn" data-tab="parse">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -48,21 +48,21 @@
                         <line x1="2" y1="12" x2="22" y2="12"/>
                         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
                     </svg>
-                    Парсинг сайта
+                    <span data-i18n="nav_parse">Парсинг сайта</span>
                 </button>
                 <button class="nav-btn" data-tab="history">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <circle cx="12" cy="12" r="10"/>
                         <polyline points="12 6 12 12 16 14"/>
                     </svg>
-                    История
+                    <span data-i18n="nav_history">История</span>
                 </button>
             </nav>
             
             <div class="sidebar-footer">
                 <div class="status-indicator">
                     <span class="status-dot"></span>
-                    <span>Система активна</span>
+                    <span><span data-i18n="status">Система активна</span></span>
                 </div>
             </div>
         </aside>
@@ -70,8 +70,12 @@
         <!-- Main Content -->
         <main class="main">
             <header class="header">
-                <h1 class="page-title">Мониторинг конкурентов</h1>
-                <p class="page-subtitle">AI-ассистент для анализа конкурентной среды</p>
+                <div class="lang-switch" role="group" aria-label="Language">
+                    <button type="button" class="lang-btn" data-lang="ru">RU</button>
+                    <button type="button" class="lang-btn" data-lang="en">EN</button>
+                </div>
+                <h1 class="page-title"><span data-i18n="page_title">Мониторинг конкурентов</span></h1>
+                <p class="page-subtitle"><span data-i18n="page_subtitle">AI-ассистент для анализа конкурентной среды</span></p>
             </header>
 
             <div class="content">
@@ -79,15 +83,16 @@
                 <section class="tab-content active" id="text-tab">
                     <div class="card">
                         <div class="card-header">
-                            <h2>Анализ текста конкурента</h2>
-                            <p>Вставьте текст с сайта конкурента, из рекламы или описания продукта</p>
+                            <h2><span data-i18n="text_h2">Анализ текста конкурента</span></h2>
+                            <p><span data-i18n="text_sub">Вставьте текст с сайта конкурента, из рекламы или описания продукта</span></p>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
-                                <label for="competitor-text">Текст для анализа</label>
+                                <label for="competitor-text"><span data-i18n="text_label">Текст для анализа</span></label>
                                 <textarea 
                                     id="competitor-text" 
                                     placeholder="Вставьте текст конкурента для анализа...&#10;&#10;Например: описание продукта, текст с лендинга, рекламное объявление..."
+                                    data-i18n-placeholder="text_placeholder"
                                     rows="8"
                                 ></textarea>
                             </div>
@@ -95,7 +100,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                                 </svg>
-                                Проанализировать
+                                <span data-i18n="analyze">Проанализировать</span>
                             </button>
                         </div>
                     </div>
@@ -105,8 +110,8 @@
                 <section class="tab-content" id="image-tab">
                     <div class="card">
                         <div class="card-header">
-                            <h2>Анализ изображений</h2>
-                            <p>Загрузите скриншот сайта, баннер или фото упаковки конкурента</p>
+                            <h2><span data-i18n="nav_image">Анализ изображений</span></h2>
+                            <p><span data-i18n="image_sub">Загрузите скриншот сайта, баннер или фото упаковки конкурента</span></p>
                         </div>
                         <div class="card-body">
                             <div class="upload-zone" id="upload-zone">
@@ -117,8 +122,8 @@
                                         <polyline points="17 8 12 3 7 8"/>
                                         <line x1="12" y1="3" x2="12" y2="15"/>
                                     </svg>
-                                    <p>Перетащите изображение или <span>выберите файл</span></p>
-                                    <small>PNG, JPG, GIF, WEBP до 10MB</small>
+                                    <p data-i18n-html="drop">Перетащите изображение или <span>выберите файл</span></p>
+                                    <small><span data-i18n="image_formats">PNG, JPG, GIF, WEBP до 10MB</span></small>
                                 </div>
                                 <div class="preview-container" id="preview-container" hidden>
                                     <img id="image-preview" alt="Preview">
@@ -129,7 +134,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                                 </svg>
-                                Проанализировать
+                                <span data-i18n="analyze">Проанализировать</span>
                             </button>
                         </div>
                     </div>
@@ -139,12 +144,12 @@
                 <section class="tab-content" id="parse-tab">
                     <div class="card">
                         <div class="card-header">
-                            <h2>Парсинг сайта конкурента</h2>
-                            <p>Введите URL сайта для автоматического извлечения и анализа контента</p>
+                            <h2><span data-i18n="parse_h2">Парсинг сайта конкурента</span></h2>
+                            <p><span data-i18n="parse_sub">Введите URL сайта для автоматического извлечения и анализа контента</span></p>
                         </div>
                         <div class="card-body">
                             <div class="form-group">
-                                <label for="url-input">URL сайта</label>
+                                <label for="url-input"><span data-i18n="parse_label">URL сайта</span></label>
                                 <div class="input-group">
                                     <span class="input-prefix">https://</span>
                                     <input 
@@ -158,7 +163,7 @@
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                     <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
                                 </svg>
-                                Парсить и анализировать
+                                <span data-i18n="parse_btn">Парсить и анализировать</span>
                             </button>
                         </div>
                     </div>
@@ -170,15 +175,15 @@
                         <div class="card-header">
                             <div class="header-with-action">
                                 <div>
-                                    <h2>История запросов</h2>
-                                    <p>Последние 10 запросов к системе</p>
+                                    <h2><span data-i18n="history_h2">История запросов</span></h2>
+                                    <p><span data-i18n="history_sub">Последние 10 запросов к системе</span></p>
                                 </div>
                                 <button class="btn btn-secondary" id="clear-history-btn">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="3 6 5 6 21 6"/>
                                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                                     </svg>
-                                    Очистить
+                                    <span data-i18n="clear">Очистить</span>
                                 </button>
                             </div>
                         </div>
@@ -189,7 +194,7 @@
                                         <circle cx="12" cy="12" r="10"/>
                                         <polyline points="12 6 12 12 16 14"/>
                                     </svg>
-                                    <p>История пуста</p>
+                                    <p><span data-i18n="history_empty">История пуста</span></p>
                                 </div>
                             </div>
                         </div>
@@ -201,7 +206,7 @@
                     <div class="card results-card">
                         <div class="card-header">
                             <div class="header-with-action">
-                                <h2>Результаты анализа</h2>
+                                <h2><span data-i18n="results_h2">Результаты анализа</span></h2>
                                 <button class="btn btn-icon" id="close-results">
                                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <line x1="18" y1="6" x2="6" y2="18"/>
@@ -223,11 +228,11 @@
     <div class="loading-overlay" id="loading-overlay" style="display: none;">
         <div class="loading-spinner">
             <div class="spinner"></div>
-            <p>Анализирую данные...</p>
+            <p><span data-i18n="loading">Анализирую данные...</span></p>
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2"></script>
 </body>
 </html>
 

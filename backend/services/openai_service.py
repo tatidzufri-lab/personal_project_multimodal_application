@@ -18,6 +18,20 @@ from backend.models.schemas import CompetitorAnalysis, ImageAnalysis
 logger = logging.getLogger("competitor_monitor.openai")
 
 
+# Промпты остаются русскими; для английского меняется только язык ответа.
+# Так обе версии анализа держатся одних и тех же правил и не расходятся при правках.
+_LANG_RULE_EN = (
+    "\n\nLANGUAGE: write every string value in the JSON in English, in plain, clear sentences. "
+    "Keep the JSON keys exactly as above."
+)
+
+
+def with_language(system_prompt: str, lang: str) -> str:
+    if lang != "en":
+        return system_prompt
+    return system_prompt.replace("- Пиши на русском языке", "- Пиши на английском языке") + _LANG_RULE_EN
+
+
 class OpenAIService:
     """Сервис для анализа через ProxyAPI"""
     
@@ -65,7 +79,7 @@ class OpenAIService:
             logger.debug(f"Проблемный контент: {content[:200]}...")
             return {}
     
-    async def analyze_text(self, text: str) -> CompetitorAnalysis:
+    async def analyze_text(self, text: str, lang: str = "ru") -> CompetitorAnalysis:
         """Анализ текста конкурента"""
         logger.info("=" * 50)
         logger.info("📝 АНАЛИЗ ТЕКСТА КОНКУРЕНТА")
@@ -109,7 +123,7 @@ class OpenAIService:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": with_language(system_prompt, lang)},
                     {"role": "user", "content": f"Проанализируй текст конкурента:\n\n{text}"}
                 ],
                 temperature=0.7,
@@ -144,7 +158,7 @@ class OpenAIService:
             logger.error("=" * 50)
             raise
     
-    async def analyze_image(self, image_base64: str, mime_type: str = "image/jpeg") -> ImageAnalysis:
+    async def analyze_image(self, image_base64: str, mime_type: str = "image/jpeg", lang: str = "ru") -> ImageAnalysis:
         """Анализ изображения (баннер, сайт, упаковка)"""
         logger.info("=" * 50)
         logger.info("🖼️ АНАЛИЗ ИЗОБРАЖЕНИЯ")
@@ -189,7 +203,7 @@ class OpenAIService:
             response = self.client.chat.completions.create(
                 model=self.vision_model,
                 messages=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": with_language(system_prompt, lang)},
                     {
                         "role": "user",
                         "content": [
@@ -242,7 +256,8 @@ class OpenAIService:
         self, 
         title: Optional[str], 
         h1: Optional[str], 
-        paragraph: Optional[str]
+        paragraph: Optional[str],
+        lang: str = "ru",
     ) -> CompetitorAnalysis:
         """Анализ распарсенного контента сайта"""
         logger.info("📄 Анализ распарсенного контента")
@@ -263,10 +278,11 @@ class OpenAIService:
         if not combined_text.strip():
             logger.warning("  ⚠ Контент пустой, возвращаем пустой анализ")
             return CompetitorAnalysis(
-                summary="Не удалось извлечь контент для анализа"
+                summary="Could not extract any content to analyse" if lang == "en"
+                else "Не удалось извлечь контент для анализа"
             )
         
-        return await self.analyze_text(combined_text)
+        return await self.analyze_text(combined_text, lang=lang)
     
     async def analyze_website_screenshot(
         self,
@@ -274,7 +290,8 @@ class OpenAIService:
         url: str,
         title: Optional[str] = None,
         h1: Optional[str] = None,
-        first_paragraph: Optional[str] = None
+        first_paragraph: Optional[str] = None,
+        lang: str = "ru",
     ) -> CompetitorAnalysis:
         """Комплексный анализ сайта конкурента по скриншоту"""
         logger.info("=" * 50)
@@ -343,7 +360,7 @@ class OpenAIService:
             response = self.client.chat.completions.create(
                 model=self.vision_model,
                 messages=[
-                    {"role": "system", "content": system_prompt},
+                    {"role": "system", "content": with_language(system_prompt, lang)},
                     {
                         "role": "user",
                         "content": [

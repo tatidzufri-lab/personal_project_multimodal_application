@@ -21,6 +21,7 @@ from backend.models.schemas import (
     ParsedContent,
     HistoryResponse
 )
+from backend.i18n import normalize_lang, to_lang
 from backend.services.openai_service import openai_service
 from backend.services.parser_service import parser_service
 from backend.services.history_service import history_service
@@ -120,8 +121,9 @@ async def root():
 @app.post("/analyze_text", response_model=TextAnalysisResponse)
 async def analyze_text(request: TextAnalysisRequest, http_request: Request):
     """
-    Анализ текста конкурента
+    Анализ текста конкурента. ?lang=en — ответ модели и ошибки на английском.
     """
+    lang = normalize_lang(http_request.query_params.get("lang"))
     logger.info("=" * 50)
     logger.info("📝 API: АНАЛИЗ ТЕКСТА")
     logger.info(f"  Длина текста: {len(request.text)} символов")
@@ -130,16 +132,16 @@ async def analyze_text(request: TextAnalysisRequest, http_request: Request):
     if len(request.text) > settings.max_text_chars:
         return TextAnalysisResponse(
             success=False,
-            error=f"Текст слишком длинный: {len(request.text)} символов, в демо можно до {settings.max_text_chars}",
+            error=to_lang(f"Текст слишком длинный: {len(request.text)} символов, в демо можно до {settings.max_text_chars}", lang),
         )
     limit_error = demo_quota.try_acquire(client_ip(http_request))
     if limit_error:
-        return TextAnalysisResponse(success=False, error=limit_error)
+        return TextAnalysisResponse(success=False, error=to_lang(limit_error, lang))
 
     try:
         start_time = time.time()
         
-        analysis = await openai_service.analyze_text(request.text)
+        analysis = await openai_service.analyze_text(request.text, lang=lang)
         
         elapsed = time.time() - start_time
         logger.info(f"  ✓ Анализ завершён за {elapsed:.2f} сек")
@@ -164,15 +166,16 @@ async def analyze_text(request: TextAnalysisRequest, http_request: Request):
         logger.error("=" * 50)
         return TextAnalysisResponse(
             success=False,
-            error=str(e)
+            error=to_lang(str(e), lang)
         )
 
 
 @app.post("/analyze_image", response_model=ImageAnalysisResponse)
 async def analyze_image(http_request: Request, file: UploadFile = File(...)):
     """
-    Анализ изображения конкурента
+    Анализ изображения конкурента. ?lang=en — ответ модели и ошибки на английском.
     """
+    lang = normalize_lang(http_request.query_params.get("lang"))
     logger.info("=" * 50)
     logger.info("🖼️ API: АНАЛИЗ ИЗОБРАЖЕНИЯ")
     logger.info(f"  Имя файла: {file.filename}")
@@ -185,7 +188,7 @@ async def analyze_image(http_request: Request, file: UploadFile = File(...)):
         logger.info("=" * 50)
         raise HTTPException(
             status_code=400,
-            detail=f"Неподдерживаемый тип файла. Разрешены: {', '.join(allowed_types)}"
+            detail=to_lang(f"Неподдерживаемый тип файла. Разрешены: {', '.join(allowed_types)}", lang)
         )
     
     try:
@@ -199,11 +202,11 @@ async def analyze_image(http_request: Request, file: UploadFile = File(...)):
         if len(content) > settings.max_image_mb * 1024 * 1024:
             return ImageAnalysisResponse(
                 success=False,
-                error=f"Файл слишком большой: в демо можно до {settings.max_image_mb} МБ",
+                error=to_lang(f"Файл слишком большой: в демо можно до {settings.max_image_mb} МБ", lang),
             )
         limit_error = demo_quota.try_acquire(client_ip(http_request))
         if limit_error:
-            return ImageAnalysisResponse(success=False, error=limit_error)
+            return ImageAnalysisResponse(success=False, error=to_lang(limit_error, lang))
         
         image_base64 = base64.b64encode(content).decode('utf-8')
         logger.info(f"  Base64 размер: {len(image_base64)} символов")
@@ -212,7 +215,8 @@ async def analyze_image(http_request: Request, file: UploadFile = File(...)):
         logger.info("  🔍 Отправка на анализ...")
         analysis = await openai_service.analyze_image(
             image_base64=image_base64,
-            mime_type=file.content_type
+            mime_type=file.content_type,
+            lang=lang,
         )
         
         elapsed = time.time() - start_time
@@ -238,15 +242,16 @@ async def analyze_image(http_request: Request, file: UploadFile = File(...)):
         logger.error("=" * 50)
         return ImageAnalysisResponse(
             success=False,
-            error=str(e)
+            error=to_lang(str(e), lang)
         )
 
 
 @app.post("/parse_demo", response_model=ParseDemoResponse)
 async def parse_demo(request: ParseDemoRequest, http_request: Request):
     """
-    Парсинг и анализ сайта конкурента через Chrome
+    Парсинг и анализ сайта конкурента через Chrome. ?lang=en — ответ и ошибки на английском.
     """
+    lang = normalize_lang(http_request.query_params.get("lang"))
     logger.info("=" * 50)
     logger.info("🌐 API: ПАРСИНГ САЙТА")
     logger.info(f"  URL: {request.url}")
@@ -257,10 +262,10 @@ async def parse_demo(request: ParseDemoRequest, http_request: Request):
     url_error = check_public_url(target)
     if url_error:
         logger.warning(f"  ⛔ Адрес отклонён: {url_error}")
-        return ParseDemoResponse(success=False, error=url_error)
+        return ParseDemoResponse(success=False, error=to_lang(url_error, lang))
     limit_error = demo_quota.try_acquire(client_ip(http_request))
     if limit_error:
-        return ParseDemoResponse(success=False, error=limit_error)
+        return ParseDemoResponse(success=False, error=to_lang(limit_error, lang))
 
     try:
         total_start = time.time()
@@ -277,7 +282,7 @@ async def parse_demo(request: ParseDemoRequest, http_request: Request):
             logger.info("=" * 50)
             return ParseDemoResponse(
                 success=False,
-                error=error
+                error=to_lang(error, lang)
             )
         
         logger.info(f"  📌 Title: {title[:50] if title else 'N/A'}...")
@@ -297,14 +302,16 @@ async def parse_demo(request: ParseDemoRequest, http_request: Request):
                 url=request.url,
                 title=title,
                 h1=h1,
-                first_paragraph=first_paragraph
+                first_paragraph=first_paragraph,
+                lang=lang,
             )
         else:
             logger.warning("  ⚠ Скриншот недоступен, fallback на текстовый анализ")
             analysis = await openai_service.analyze_parsed_content(
                 title=title,
                 h1=h1,
-                paragraph=first_paragraph
+                paragraph=first_paragraph,
+                lang=lang,
             )
         
         ai_elapsed = time.time() - ai_start
@@ -341,7 +348,7 @@ async def parse_demo(request: ParseDemoRequest, http_request: Request):
         logger.error("=" * 50)
         return ParseDemoResponse(
             success=False,
-            error=str(e)
+            error=to_lang(str(e), lang)
         )
 
 

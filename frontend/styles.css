@@ -209,7 +209,8 @@ body::before {
 }
 
 .header {
-    padding: 32px 40px;
+    position: relative;
+    padding: 32px 140px 32px 40px;
     border-bottom: 1px solid var(--border-color);
     background: rgba(17, 24, 39, 0.5);
     backdrop-filter: blur(10px);
@@ -836,3 +837,61 @@ input[type="text"]::placeholder {
     flex-shrink: 0;
 }
 
+
+/* === Переключатель языка === */
+.lang-switch {
+    position: absolute;
+    top: 24px;
+    right: 24px;
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--bg-input);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+}
+
+.lang-btn {
+    min-width: 40px;
+    min-height: 32px;
+    padding: 4px 10px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.lang-btn:hover {
+    color: var(--text-primary);
+}
+
+.lang-btn.active {
+    background: var(--accent-primary);
+    color: var(--bg-primary);
+}
+
+.lang-btn:focus-visible {
+    outline: 2px solid var(--accent-secondary);
+    outline-offset: 2px;
+}
+
+@media (max-width: 768px) {
+    /* в нижней панели подписи вкладок видны под иконками */
+    .nav-btn span {
+        display: inline;
+    }
+
+    .lang-switch {
+        top: 16px;
+        right: 16px;
+    }
+
+    .header {
+        padding-right: 120px;
+    }
+}
