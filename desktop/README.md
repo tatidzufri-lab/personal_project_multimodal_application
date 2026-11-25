@@ -1,44 +1,44 @@
-# CompetitorAI: десктоп-приложение
+# CompetitorAI: desktop app
 
-Приложение на PyQt6 с теми же режимами, что и веб-интерфейс: анализ текста, анализ изображений (можно перетащить файл в окно), анализ сайта по ссылке и история последних 10 запросов. Оформление повторяет веб-версию: темная тема, боковая панель навигации, карточки с формами.
+A PyQt6 app with the same modes as the web interface: text analysis, image analysis (you can drag a file into the window), website analysis by link and the history of the last 10 requests. The look follows the web version: a dark theme, a side navigation panel, cards with forms.
 
-Сам анализ делает сервер проекта, поэтому перед запуском приложения сервер должен работать на `http://localhost:8000`.
+The analysis itself is done by the project's server, so the server must be running on `http://localhost:8000` before you start the app.
 
-## Запуск
+## Running it
 
 ```bash
-# в корне проекта
+# in the project root
 python run.py
 
-# в другом терминале
+# in another terminal
 cd desktop
 pip install -r requirements.txt
 python main.py
 ```
 
-## Сборка
+## Building
 
-Windows, файл `CompetitorMonitor.exe` появится в `dist/`:
+Windows; `CompetitorMonitor.exe` appears in `dist/`:
 
 ```bash
 cd desktop
 python build.py
 ```
 
-macOS, приложение `.app`:
+macOS, a `.app` bundle:
 
 ```bash
 cd desktop
 python build_mac.py
 ```
 
-Удалить артефакты сборки: `python build.py clean`.
+Remove build artifacts: `python build.py clean`.
 
-Собранное приложение тоже обращается к серверу, его нужно запускать отдельно. Встроить сервер внутрь приложения пока не сделано.
+The built app also talks to the server, which has to be started separately. Bundling the server into the app isn't done yet.
 
-## Файлы
+## Files
 
-- `main.py`: главное окно.
-- `styles.py`: темная тема.
-- `api_client.py`: HTTP-клиент для сервера.
-- `build.py`, `build_mac.py`, `CompetitorMonitor.spec`: сборка через PyInstaller.
+- `main.py`: the main window.
+- `styles.py`: the dark theme.
+- `api_client.py`: HTTP client for the server.
+- `build.py`, `build_mac.py`, `CompetitorMonitor.spec`: building with PyInstaller.
